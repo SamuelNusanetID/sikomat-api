@@ -13,7 +13,6 @@ var multer = require("multer");
 var path = require("path");
 var fs = require("fs");
 const jwt = require("jsonwebtoken");
-const { Telegraf } = require("telegraf");
 import { getCustomRepository, getRepository } from "typeorm";
 import { Verify } from "./entity/Verify";
 import { print } from "util";
