@@ -19,24 +19,37 @@ import { print } from "util";
 var otpGenerator = require("otp-generator");
 import { pagination } from "typeorm-pagination";
 
+// var storage = multer.diskStorage({
+//   destination: async function (req, file, cb) {
+//     console.log("destination");
+//     let u = await req.user;
+//     // if (!fs.existsSync("protected/" + u.tipe + "/" + (u.tipe == "mahasiswa" ? u.nim : u.nip))) {
+//     //     fs.mkdirSync("protected/" + u.tipe + "/" + (u.tipe == "mahasiswa" ? u.nim : u.nip));
+//     // }
+//     cb(null, "/uploads/");
+//   },
+//   filename: async function (req, file, cb) {
+//     console.log(await req.body.partograf);
+//     console.log("filename");
+//     cb(null, await req.body.partograf);
+//   },
+// });
+
 var storage = multer.diskStorage({
-  destination: async function (req, file, cb) {
-    console.log("destination");
-    let u = await req.user;
-    // if (!fs.existsSync("protected/" + u.tipe + "/" + (u.tipe == "mahasiswa" ? u.nim : u.nip))) {
-    //     fs.mkdirSync("protected/" + u.tipe + "/" + (u.tipe == "mahasiswa" ? u.nim : u.nip));
-    // }
-    cb(null, "uploads/");
+  destination: function (req, file, cb) {
+    fs.mkdir('./uploads/',(err)=>{
+      cb(null, './uploads/');
+   });
   },
-  filename: async function (req, file, cb) {
-    console.log(await req.body.partograf);
-    console.log("filename");
-    cb(null, await req.body.partograf);
-  },
-});
+  filename: function (req, file, cb) {
+    console.log('TestFilename');
+    cb(null, req.body.partograf);
+  }
+})
+var upload = multer({ storage: storage });
 
 //console.log(require('crypto').randomBytes(64).toString('hex'))
-var upload = multer({ storage: storage });
+// var upload = multer({ storage: storage });
 // const upload = multer({ dest: 'uploads/' })
 
 createConnection()
@@ -47,7 +60,9 @@ createConnection()
     // app.use(cors())
     app.use(pagination);
     //app.use(express.static("public"))
-    app.use("/public/", express.static("./public"));
+    // app.use("/public/", express.static("./public"));
+    app.use(express.static(__dirname + '/public'));
+    app.use('/uploads', express.static('uploads'));
 
     //console.log(process.env.TOKEN_SECRET);
     app.set("json replacer", function (key, value) {

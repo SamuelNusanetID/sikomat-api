@@ -303,7 +303,6 @@ export class BidanController {
 
     @Transaction()
     async keluhanPasienAdd(request: Request, response: Response, next: NextFunction, @TransactionRepository(DaftarKeluhanPasien) keluhanRepo: Repository<DaftarKeluhanPasien>) {
-        console.log("keluhanPasienAdd");
         console.log(await request.body);
         let data = await request.body.data;
         //let riwayat_pasien = new RiwayatPasien();
@@ -329,49 +328,35 @@ export class BidanController {
         admins.forEach(async (user) => {
             await axios({
                 method: 'post',
-                url: 'https://api.telegram.org/bot5046326803:AAE1ItiKmTlJKU3C6TJiJoK8VEUx6dda-3E/sendMessage',
-                data: {
-                    "text": `Ada report baru dari aplikasi bidan, pengirim: ${riwayatPasien.pasien.bidan.nama}, Keluhan: ${riwayatPasien.kelompok_keluhan.nama}, silahkan cek aplikasi`,
+                headers: {
+                    'Authorization': 'key=AAAA5uCovIc:APA91bGdU1-Mj3aY0DEoQA5P8lfLVVEIL-EFhIAJ1wnIrP5yylz-B0vMj9NDSwDssfamSDfee1sjGHOoD154w7Vf3-hILG_TkpimMoTwMKoy40kElgQjAA63aGSrFkJR3qCfJrHc3LX2'
                 },
-                config: { headers: { 'Content-Type': 'multipart/form-data' } },
+                url: 'https://fcm.googleapis.com/fcm/send',
+                data: {
+                    "data": {
+                        "title": `Pesan Baru dari Bidan ${riwayatPasien.pasien.bidan.nama}`,
+                        "message": `Ada Feedback Baru dari Bidan ${riwayatPasien.pasien.bidan.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
+                        "payload": {
+                            "sender_id": riwayatPasien.pasien.bidan.id,
+                            "reciever_id": user.id,
+                            "routes": "/riwayat_submitted",
+                            "pasien_id": riwayatPasien.pasien.id
+                        },
+                        "click_action": "FLUTTER_NOTIFICATION_CLICK"
+                    },
+                    "to": "c8Zper9AQNGa5Fsc6M70-R:APA91bFN76Mu4iVznkKjums9JTFsixEUd6-WNcQ8JLsXz2k5bY-0qxRNyWPDhb9BzGTk_mSAbMg4FfJ5wL1lupAF0443R55X-vTLkXfV4e5_A19DyXdwuCzVoBy96XUC-JZsYUOJdLZk"
+                },
+                config: { headers: { 'Content-Type': 'application/json' } },
             })
-                .then(function (response) {
-                    console.log(response)
-
-                })
-                .catch(function (error) {
-                    console.log(error)
-                })
-        });
-        await axios({
-            method: 'post',
-            headers: {
-                'Authorization': 'Bearer AAAAI3wx8u4:APA91bFAi2-jJehykzQoCw6QJ2LjYdioFjLu2Pdw_XyZcQ7HdzQYONR4ReC0tg3PTLNDUVDaNLZy9LrhzqvRy9Ovj9njCb5fLuJjasOUsGfnN9YmxnBwzprJlcQFriJ1S9da9rnAw56q'
-            },
-            url: 'https://fcm.googleapis.com/fcm/send',
-            data: {
-                "notification_type": "Nice Thoughts",
-                "to": "/topics/reportbidan",
-                "mutable-content": true,
-                "data": { "riwayat_id": riwayatPasien.id },
-                "notification": {
-                    "title": "Report Baru dari Bidan",
-                    "body": `Ada report baru dari aplikasi bidan, Pengirim:  ${riwayatPasien.pasien.bidan.nama}, Keluhan:${riwayatPasien.kelompok_keluhan.nama}`,
-                    "click_action": "FLUTTER_NOTIFICATION_CLICK",
-                }
-            },
-            config: { headers: { 'Content-Type': 'multipart/form-data' } },
-        })
             .then(function (response) {
                 console.log(response)
-
             })
             .catch(function (error) {
                 console.log(error)
             })
-
+        });
+        
         return riwayatPasien;
-
     }
 
     async addSkreening(request: Request, response: Response, next: NextFunction) {

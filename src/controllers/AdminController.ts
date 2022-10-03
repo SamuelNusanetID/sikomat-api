@@ -50,49 +50,62 @@ export class AdminController {
         data.feedback_send_date = new Date();
         if (await this.riwayatRepo.save(data)) {
             let user = await this.userRepo.findOne({ hp: data.pasien.bidan.hp });
-            await axios({
-                method: 'post',
-                url: 'https://api.telegram.org/bot5046326803:AAE1ItiKmTlJKU3C6TJiJoK8VEUx6dda-3E/sendMessage',
-                data: {
-                    "text": `Feedback dari admin untuk pasien : ${data.pasien.nama}, Keluhan: ${data.kelompok_keluhan.nama}, silahkan cek aplikasi`,
-                },
-                config: { headers: { 'Content-Type': 'multipart/form-data' } },
-            })
-                .then(function (response) {
-                    console.log(response)
-
-                })
-                .catch(function (error) {
-                    console.log(error)
-                });
-
-
+            let admin = await this.userRepo.findOne({hp: data.admin_hp});
             await axios({
                 method: 'post',
                 headers: {
-                    'Authorization': 'Bearer AAAAI3wx8u4:APA91bFAi2-jJehykzQoCw6QJ2LjYdioFjLu2Pdw_XyZcQ7HdzQYONR4ReC0tg3PTLNDUVDaNLZy9LrhzqvRy9Ovj9njCb5fLuJjasOUsGfnN9YmxnBwzprJlcQFriJ1S9da9rnAw56q'
+                    'Authorization': 'key=AAAA5uCovIc:APA91bGdU1-Mj3aY0DEoQA5P8lfLVVEIL-EFhIAJ1wnIrP5yylz-B0vMj9NDSwDssfamSDfee1sjGHOoD154w7Vf3-hILG_TkpimMoTwMKoy40kElgQjAA63aGSrFkJR3qCfJrHc3LX2'
                 },
                 url: 'https://fcm.googleapis.com/fcm/send',
                 data: {
-                    "notification_type": "Nice Thoughts",
-                    "to": user.fcm_token,
-                    "mutable-content": true,
-                    "data": { "riwayat_id": data.id },
-                    "notification": {
-                        "title": "Report Baru dari Bidan",
-                        "body": `Feedback dari admin untuk pasien : ${data.pasien.nama}, Keluhan: ${data.kelompok_keluhan.nama}, silahkan cek aplikasi`,
-                        "click_action": "FLUTTER_NOTIFICATION_CLICK",
-                    }
+                    "data": {
+                        "title": "Pesan Baru dari RS. USU Medan",
+                        "message": "Ada Feedback Baru dari RS. USU Medan untuk Pasien 77. Klik disini untuk melihat pesan.",
+                        "payload": {
+                            "sender_id": admin.id,
+                            "reciever_id": user.id,
+                            "routes": "/riwayat_submitted",
+                            "pasien_id": data.pasien.id
+                        },
+                        "click_action": "FLUTTER_NOTIFICATION_CLICK"
+                    },
+                    "to": user.fcm_token
                 },
-                config: { headers: { 'Content-Type': 'multipart/form-data' } },
+                config: { headers: { 'Content-Type': 'application/json' } },
             })
-                .then(function (response) {
-                    console.log(response)
+            .then(function (response) {
+                console.log(response)
+            })
+            .catch(function (error) {
+                console.log(error)
+            })
 
-                })
-                .catch(function (error) {
-                    console.log(error)
-                })
+            // await axios({
+            //     method: 'post',
+            //     headers: {
+            //         'Authorization': 'key=AAAA5uCovIc:APA91bGdU1-Mj3aY0DEoQA5P8lfLVVEIL-EFhIAJ1wnIrP5yylz-B0vMj9NDSwDssfamSDfee1sjGHOoD154w7Vf3-hILG_TkpimMoTwMKoy40kElgQjAA63aGSrFkJR3qCfJrHc3LX2'
+            //     },
+            //     url: 'https://fcm.googleapis.com/fcm/send',
+            //     data: {
+            //         "notification_type": "Nice Thoughts",
+            //         "to": user.fcm_token,
+            //         "mutable-content": true,
+            //         "data": { "riwayat_id": data.id },
+            //         "notification": {
+            //             "title": "Report Baru dari Bidan",
+            //             "body": `Feedback dari admin untuk pasien : ${data.pasien.nama}, Keluhan: ${data.kelompok_keluhan.nama}, silahkan cek aplikasi`,
+            //             "click_action": "FLUTTER_NOTIFICATION_CLICK",
+            //         }
+            //     },
+            //     config: { headers: { 'Content-Type': 'application/json' } },
+            // })
+            //     .then(function (response) {
+            //         console.log(response)
+
+            //     })
+            //     .catch(function (error) {
+            //         console.log(error)
+            //     })
             return { "success": true };
 
         } else {
