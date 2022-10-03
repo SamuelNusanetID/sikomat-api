@@ -344,7 +344,7 @@ export class BidanController {
                         },
                         "click_action": "FLUTTER_NOTIFICATION_CLICK"
                     },
-                    "to": "c8Zper9AQNGa5Fsc6M70-R:APA91bFN76Mu4iVznkKjums9JTFsixEUd6-WNcQ8JLsXz2k5bY-0qxRNyWPDhb9BzGTk_mSAbMg4FfJ5wL1lupAF0443R55X-vTLkXfV4e5_A19DyXdwuCzVoBy96XUC-JZsYUOJdLZk"
+                    "to": user.fcm_token
                 },
                 config: { headers: { 'Content-Type': 'application/json' } },
             })
