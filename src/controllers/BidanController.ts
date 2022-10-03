@@ -333,19 +333,17 @@ export class BidanController {
                 },
                 url: 'https://fcm.googleapis.com/fcm/send',
                 data: {
-                    "data": {
-                        "title": `Pesan Baru dari Bidan ${riwayatPasien.pasien.bidan.nama}`,
-                        "message": `Ada Feedback Baru dari Bidan ${riwayatPasien.pasien.bidan.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
-                        "payload": {
-                            "sender_id": riwayatPasien.pasien.bidan.id,
-                            "reciever_id": user.id,
-                            "routes": "/riwayat_submitted",
-                            "pasien_id": riwayatPasien.pasien.id
-                        },
-                        "click_action": "FLUTTER_NOTIFICATION_CLICK"
+                    "title": `Pesan Baru dari Bidan ${riwayatPasien.pasien.bidan.nama}`,
+                    "message": `Ada Feedback Baru dari Bidan ${riwayatPasien.pasien.bidan.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
+                    "payload": {
+                        "sender_id": riwayatPasien.pasien.bidan.id,
+                        "reciever_id": user.id,
+                        "routes": "/riwayat_submitted",
+                        "pasien_id": riwayatPasien.pasien.id
                     },
-                    "to": user.fcm_token
+                    "click_action": "FLUTTER_NOTIFICATION_CLICK"
                 },
+                to: user.fcm_token,
                 config: { headers: { 'Content-Type': 'application/json' } },
             })
             .then(function (response) {
