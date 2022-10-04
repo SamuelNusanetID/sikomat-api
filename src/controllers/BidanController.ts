@@ -326,32 +326,42 @@ export class BidanController {
 
         let admins = await this.userRepo.find({ where: { user_type: "admin" } });
         admins.forEach(async (user) => {
-            await axios({
-                method: 'post',
-                headers: {
-                    'Authorization': 'key=AAAA5uCovIc:APA91bGdU1-Mj3aY0DEoQA5P8lfLVVEIL-EFhIAJ1wnIrP5yylz-B0vMj9NDSwDssfamSDfee1sjGHOoD154w7Vf3-hILG_TkpimMoTwMKoy40kElgQjAA63aGSrFkJR3qCfJrHc3LX2'
-                },
-                url: 'https://fcm.googleapis.com/fcm/send',
-                data: {
-                    "title": `Pesan Baru dari Bidan ${riwayatPasien.pasien.bidan.nama}`,
-                    "message": `Ada Feedback Baru dari Bidan ${riwayatPasien.pasien.bidan.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
-                    "payload": {
-                        "sender_id": riwayatPasien.pasien.bidan.id,
-                        "reciever_id": user.id,
-                        "routes": "/riwayat_submitted",
-                        "pasien_id": riwayatPasien.pasien.id
+            if (user.fcm_token != null && user.user_type == 'admin') {
+                console.log(user.nama);
+                console.log(riwayatPasien.pasien.bidan.id);
+                console.log(user.id);
+                console.log(riwayatPasien.id);
+
+                await axios({
+                    method: 'post',
+                    headers: {
+                        'Authorization': 'key=AAAA5uCovIc:APA91bGdU1-Mj3aY0DEoQA5P8lfLVVEIL-EFhIAJ1wnIrP5yylz-B0vMj9NDSwDssfamSDfee1sjGHOoD154w7Vf3-hILG_TkpimMoTwMKoy40kElgQjAA63aGSrFkJR3qCfJrHc3LX2'
                     },
-                    "click_action": "FLUTTER_NOTIFICATION_CLICK"
-                },
-                to: user.fcm_token,
-                config: { headers: { 'Content-Type': 'application/json' } },
-            })
-            .then(function (response) {
-                console.log(response)
-            })
-            .catch(function (error) {
-                console.log(error)
-            })
+                    url: 'https://fcm.googleapis.com/fcm/send',
+                    data: {
+                        "data": {
+                            "title": `Pesan Baru dari Bidan ${riwayatPasien.pasien.bidan.nama}`,
+                            "message": `Ada Feedback Baru dari Bidan ${riwayatPasien.pasien.bidan.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
+                            "payload": {
+                                "sender_id": riwayatPasien.pasien.bidan.id,
+                                "reciever_id": user.id,
+                                "routes": "/riwayat_submitted",
+                                "pasien_id": riwayatPasien.id
+                            },
+                            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+                        },
+                        "to": user.fcm_token,
+                    },
+                    config: { headers: { 'Content-Type': 'application/json' } },
+                })
+                .then(function (response) {
+                    console.log(user.nama);
+                    console.log(response.data);
+                })
+                .catch(function (error) {
+                    console.log(error)
+                })
+            }
         });
         
         return riwayatPasien;

@@ -51,6 +51,13 @@ export class AdminController {
         if (await this.riwayatRepo.save(data)) {
             let user = await this.userRepo.findOne({ hp: data.pasien.bidan.hp });
             let admin = await this.userRepo.findOne({hp: data.admin_hp});
+            let riwayatPasien = await this.riwayatRepo.findOne({
+                where: {
+                    id: data.id
+                },
+                relations: ["pasien", "pasien.bidan", "kelompok_keluhan", "daftar_keluhan_pasien", 'daftar_keluhan_pasien.keluhan', 'daftar_keluhan_pasien.keluhan.daftar_keluhan'],
+            })
+
             await axios({
                 method: 'post',
                 headers: {
@@ -59,13 +66,13 @@ export class AdminController {
                 url: 'https://fcm.googleapis.com/fcm/send',
                 data: {
                     "data": {
-                        "title": "Pesan Baru dari RS. USU Medan",
-                        "message": "Ada Feedback Baru dari RS. USU Medan untuk Pasien 77. Klik disini untuk melihat pesan.",
+                        "title": `Pesan Baru dari ${admin.nama}`,
+                        "message": `Ada Feedback Baru dari ${admin.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
                         "payload": {
                             "sender_id": admin.id,
-                            "reciever_id": user.id,
+                            "reciever_id": riwayatPasien.pasien.bidan.id,
                             "routes": "/riwayat_submitted",
-                            "pasien_id": data.pasien.id
+                            "pasien_id": riwayatPasien.id
                         },
                         "click_action": "FLUTTER_NOTIFICATION_CLICK"
                     },
