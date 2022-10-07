@@ -37,9 +37,9 @@ import { pagination } from "typeorm-pagination";
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    fs.mkdir('./uploads/',(err)=>{
+    fs.mkdir('./uploads/', (err) => {
       cb(null, './uploads/');
-   });
+    });
   },
   filename: function (req, file, cb) {
     console.log('TestFilename');
@@ -57,7 +57,7 @@ createConnection()
     const app = express();
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(express.json());
-    // app.use(cors())
+    app.use(cors())
     app.use(pagination);
     //app.use(express.static("public"))
     // app.use("/public/", express.static("./public"));
