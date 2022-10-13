@@ -95,9 +95,22 @@ export class BidanController {
     }
 
     async pasienList(request: Request, response: Response, next: NextFunction) {
-        let bidan = await this.bidanRepo.findOne({ hp: request.user.username });
-        let pasien = await this.pasienRepo.find({ where: { bidan: bidan }, relations: ['riwayat', 'riwayat.daftar_keluhan_pasien', 'riwayat.kelompok_keluhan'] });
-        return { "pasien": pasien };
+        if (request.user.username == "ibi") {
+            let user = await this.userRepo.find();
+            var pasienArr = [];
+            user.forEach(async (e) => {
+                if (e.user_type == 'bidan') {
+                    let bidan = await this.bidanRepo.findOne({ hp: e.hp });
+                    let pasien = await this.pasienRepo.find({ where: { bidan: bidan }, relations: ['riwayat', 'riwayat.daftar_keluhan_pasien', 'riwayat.kelompok_keluhan'] });
+                    pasienArr.push(pasien);
+                }
+            });
+            return { "pasien": pasienArr };
+        } else {
+            let bidan = await this.bidanRepo.findOne({ hp: request.user.username });
+            let pasien = await this.pasienRepo.find({ where: { bidan: bidan }, relations: ['riwayat', 'riwayat.daftar_keluhan_pasien', 'riwayat.kelompok_keluhan'] });
+            return { "pasien": pasien };
+        }
     }
 
 
@@ -354,16 +367,16 @@ export class BidanController {
                     },
                     config: { headers: { 'Content-Type': 'application/json' } },
                 })
-                .then(function (response) {
-                    console.log(user.nama);
-                    console.log(response.data);
-                })
-                .catch(function (error) {
-                    console.log(error)
-                })
+                    .then(function (response) {
+                        console.log(user.nama);
+                        console.log(response.data);
+                    })
+                    .catch(function (error) {
+                        console.log(error)
+                    })
             }
         });
-        
+
         return riwayatPasien;
     }
 
