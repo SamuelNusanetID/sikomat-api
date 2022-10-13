@@ -5,8 +5,9 @@ import * as moment from "moment";
 import "moment/locale/id";
 import { getManager } from "typeorm";
 import { RiwayatPasien } from "../entity/RiwayatPasien";
+import { PasienRepository } from "../repositories/PasienRepostiroy";
 import { BidanRepository } from "../repositories/BidanRepository";
-
+import { SuperUserRepository } from "../repositories/SuperUserRepository";
 
 let ejs = require("ejs");
 let pdf = require("html-pdf");
@@ -15,7 +16,9 @@ var fs = require("fs");
 var qr = require("qr-image");
 
 export class StatistikController {
+    private pasienRepo = getCustomRepository(PasienRepository);
     private bidanRepo = getCustomRepository(BidanRepository);
+    private superuseRepo = getCustomRepository(SuperUserRepository);
     private riwayatRepo = getRepository(RiwayatPasien);
 
     async stats(request: Request, response: Response, next: NextFunction) {
@@ -23,10 +26,19 @@ export class StatistikController {
         let haritanggal = (moment(new Date())).format("dddd, DD MMMM YYYY");
         let bulantahun = (moment(new Date())).format("MMMM YYYY");
         let tahun = (moment(new Date())).format("YYYY");
+        const { jumlah_pasien } = await this.pasienRepo
+            .createQueryBuilder("pasien")
+            .select("COUNT(*)", "jumlah_pasien")
+            .getRawOne()
         const { jumlah_bidan } = await this.bidanRepo
             .createQueryBuilder("bidan")
             .select("COUNT(*)", "jumlah_bidan")
             .getRawOne()
+        const { jumlah_user } = await this.superuseRepo
+            .createQueryBuilder()
+            .select("COUNT(*)", "jumlah_user")
+            .getRawOne()
+
         const riwayat_per_hari = await this.riwayatRepo
             .createQueryBuilder("riwayat_pasien")
             .select("TO_CHAR(tanggal_periksa, 'dd') AS tanggal")
@@ -58,7 +70,9 @@ export class StatistikController {
             )
             .getRawMany()
         return {
+            "jumlah_pasien": jumlah_pasien,
             "jumlah_bidan": jumlah_bidan,
+            "jumlah_user": jumlah_user,
             "riwayat_per_hari": riwayat_per_hari,
             "riwayat_per_bulan": riwayat_per_bulan,
             "hariini": hariini,
