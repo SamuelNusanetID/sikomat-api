@@ -97,18 +97,17 @@ export class BidanController {
     async pasienList(request: Request, response: Response, next: NextFunction) {
         if (request.user.username == "ibi") {
             let user = await this.userRepo.find();
-            console.log(user);
-            var pasienArr = [];
+            let bidan = [];
+            let pasien = [];
+            var i = 0;
             user.forEach(async (e) => {
                 if (e.user_type == 'bidan') {
-                    let bidan = await this.bidanRepo.findOne({ hp: e.hp });
-                    let pasien = await this.pasienRepo.find({ where: { bidan: bidan }, relations: ['riwayat', 'riwayat.daftar_keluhan_pasien', 'riwayat.kelompok_keluhan'] });
-                    console.log(bidan);
-                    console.log(pasien);
-                    pasienArr.push(pasien);
+                    bidan[i] = await this.bidanRepo.findOne({ hp: e.hp });
+                    pasien[i] = await this.pasienRepo.find({ where: { bidan: bidan[i] }, relations: ['riwayat', 'riwayat.daftar_keluhan_pasien', 'riwayat.kelompok_keluhan'] });
+                    i++;
                 }
             });
-            return { "pasien": pasienArr };
+            return { "user": user, "bidan": bidan, "pasien": pasien };
         } else {
             let bidan = await this.bidanRepo.findOne({ hp: request.user.username });
             let pasien = await this.pasienRepo.find({ where: { bidan: bidan }, relations: ['riwayat', 'riwayat.daftar_keluhan_pasien', 'riwayat.kelompok_keluhan'] });
