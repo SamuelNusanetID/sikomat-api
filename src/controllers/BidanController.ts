@@ -100,10 +100,10 @@ export class BidanController {
             let bidan = [];
             let pasien = [];
             var i = 0;
-            user.forEach(async (e) => {
+            user.forEach((e) => {
                 if (e.user_type == 'bidan') {
-                    bidan[i] = await this.bidanRepo.findOne({ hp: e.hp });
-                    pasien[i] = await this.pasienRepo.find({ where: { bidan: bidan[i] }, relations: ['riwayat', 'riwayat.daftar_keluhan_pasien', 'riwayat.kelompok_keluhan'] });
+                    bidan[i] = this.bidanRepo.findOne({ hp: e.hp });
+                    pasien[i] = this.pasienRepo.find({ where: { bidan: bidan[i] }, relations: ['riwayat', 'riwayat.daftar_keluhan_pasien', 'riwayat.kelompok_keluhan'] });
                     i++;
                 }
             });
