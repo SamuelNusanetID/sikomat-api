@@ -8,12 +8,17 @@ import { Anc } from "../entity/Anc";
 import { DetailAnc } from "../entity/DetailAnc";
 import { UserRepository } from "../repositories/UserRepository";
 import { Skreening } from "../entity/Skreening";
-import * as moment from "moment";
+import moment from "moment";
 import { print } from "util";
+import { firebase } from "../config/firebase-config";
 var fs = require("fs");
 var path = require("path");
 const axios = require('axios')
 const { parse, stringify } = require('roman-numerals-convert');
+
+export interface IGetUserAuthInfoRequest extends Request {
+    user: any // or any other type
+}
 
 export class BidanController {
 
@@ -31,13 +36,13 @@ export class BidanController {
         return {};
     }
 
-    async profile(request: Request, response: Response, next: NextFunction) {
+    async profile(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         console.log("Call Profile");
         let payload = await this.bidanRepo.findOne({ hp: request.user.username });
         return payload;
     }
 
-    async update(request: Request, response: Response, next: NextFunction) {
+    async update(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let bidan = await this.bidanRepo.findOne({ hp: request.user.username });
         console.log("update bidan")
         console.log(request.body['hp']);
@@ -72,7 +77,7 @@ export class BidanController {
 
     }
 
-    async pasienAdd(request: Request, response: Response, next: NextFunction) {
+    async pasienAdd(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let bidan = await this.bidanRepo.findOne({ hp: request.user.username });
         let pasien = await this.pasienRepo.findOne({ id: request.body.id });
 
@@ -94,7 +99,7 @@ export class BidanController {
         }
     }
 
-    async pasienList(request: Request, response: Response, next: NextFunction) {
+    async pasienList(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         if (request.user.username == "ibi") {
             let user = await this.userRepo.find();
             let bidan = [];
@@ -248,7 +253,7 @@ export class BidanController {
     }
 
 
-    async unread(request: Request, response: Response, next: NextFunction) {
+    async unread(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let bidan = await this.bidanRepo.findOne({ hp: request.user.username });
         console.log(bidan);
         let riwayatPasien = await this.riwayatRepo.find({
@@ -340,6 +345,12 @@ export class BidanController {
         })
 
         let admins = await this.userRepo.find({ where: { user_type: "admin" } });
+
+        var token = [];
+        var message = [];
+        var options = [];
+
+        var i = 0;
         admins.forEach(async (user) => {
             if (user.fcm_token != null && user.user_type == 'admin') {
                 console.log(user.nama);
@@ -347,35 +358,30 @@ export class BidanController {
                 console.log(user.id);
                 console.log(riwayatPasien.id);
 
-                await axios({
-                    method: 'post',
-                    headers: {
-                        'Authorization': 'key=AAAA5uCovIc:APA91bGdU1-Mj3aY0DEoQA5P8lfLVVEIL-EFhIAJ1wnIrP5yylz-B0vMj9NDSwDssfamSDfee1sjGHOoD154w7Vf3-hILG_TkpimMoTwMKoy40kElgQjAA63aGSrFkJR3qCfJrHc3LX2'
-                    },
-                    url: 'https://fcm.googleapis.com/fcm/send',
-                    data: {
-                        "data": {
-                            "title": `Pesan Baru dari Bidan ${riwayatPasien.pasien.bidan.nama}`,
-                            "message": `Ada Feedback Baru dari Bidan ${riwayatPasien.pasien.bidan.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
-                            "payload": {
-                                "sender_id": riwayatPasien.pasien.bidan.id,
-                                "reciever_id": user.id,
-                                "routes": "/riwayat_submitted",
-                                "pasien_id": riwayatPasien.id
-                            },
-                            "click_action": "FLUTTER_NOTIFICATION_CLICK",
-                        },
-                        "to": user.fcm_token,
-                    },
-                    config: { headers: { 'Content-Type': 'application/json' } },
-                })
-                    .then(function (response) {
-                        console.log(user.nama);
-                        console.log(response.data);
-                    })
-                    .catch(function (error) {
-                        console.log(error)
-                    })
+                token[i] = user.fcm_token;
+                message[i] = {
+                    "data": {
+                        "title": `Pesan Baru dari Bidan ${riwayatPasien.pasien.bidan.nama}`,
+                        "message": `Ada Feedback Baru dari Bidan ${riwayatPasien.pasien.bidan.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
+                        "sender_id": riwayatPasien.pasien.bidan.id,
+                        "reciever_id": user.id,
+                        "routes": "/riwayat_submitted",
+                        "pasien_id": riwayatPasien.id
+                    }
+                };
+                options[i] = {
+                    "priority": "high",
+                    "timeToLive": 86400
+                };
+
+                await firebase.messaging().sendToDevice(token[i], message[i], options[i])
+                .then(response => {
+                    console.log(response);
+                }).catch(error => {
+                    console.log(error);
+                });
+
+                i++;
             }
         });
 

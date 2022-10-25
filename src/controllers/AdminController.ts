@@ -7,9 +7,14 @@ import { DaftarKeluhanPasien } from "../entity/DaftarKeluhanPasien";
 import { BidanRepository } from "../repositories/BidanRepository";
 import { isNull } from "util";
 import { Anc } from "../entity/Anc";
+import { firebase } from "../config/firebase-config";
 var fs = require("fs");
 var path = require("path");
 const axios = require('axios')
+
+export interface IGetUserAuthInfoRequest extends Request {
+    user: any // or any other type
+}
 
 export class AdminController {
 
@@ -34,7 +39,7 @@ export class AdminController {
         return { "riwayat_pasien": data };
     }
 
-    async feedback(request: Request, response: Response, next: NextFunction) {
+    async feedback(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let admin = await this.userRepo.findByHp(request.user.username);
         let data = await this.riwayatRepo.findOne({
             where: {
@@ -42,12 +47,14 @@ export class AdminController {
             },
             relations: ["pasien", "pasien.bidan", "kelompok_keluhan"],
         })
+
         data.feedback = request.body.feedback
         data.feedback_admin = admin.nama
         data.admin_read = true;
         data.admin_hp = admin.hp;
         data.admin_read_date = new Date();
         data.feedback_send_date = new Date();
+
         if (await this.riwayatRepo.save(data)) {
             let user = await this.userRepo.findOne({ hp: data.pasien.bidan.hp });
             let admin = await this.userRepo.findOne({hp: data.admin_hp});
@@ -58,69 +65,36 @@ export class AdminController {
                 relations: ["pasien", "pasien.bidan", "kelompok_keluhan", "daftar_keluhan_pasien", 'daftar_keluhan_pasien.keluhan', 'daftar_keluhan_pasien.keluhan.daftar_keluhan'],
             })
 
-            await axios({
-                method: 'post',
-                headers: {
-                    'Authorization': 'key=AAAA5uCovIc:APA91bGdU1-Mj3aY0DEoQA5P8lfLVVEIL-EFhIAJ1wnIrP5yylz-B0vMj9NDSwDssfamSDfee1sjGHOoD154w7Vf3-hILG_TkpimMoTwMKoy40kElgQjAA63aGSrFkJR3qCfJrHc3LX2'
-                },
-                url: 'https://fcm.googleapis.com/fcm/send',
-                data: {
-                    "data": {
-                        "title": `Pesan Baru dari ${admin.nama}`,
-                        "message": `Ada Feedback Baru dari ${admin.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
-                        "payload": {
-                            "sender_id": admin.id,
-                            "reciever_id": riwayatPasien.pasien.bidan.id,
-                            "routes": "/riwayat_submitted",
-                            "pasien_id": riwayatPasien.id
-                        },
-                        "click_action": "FLUTTER_NOTIFICATION_CLICK"
-                    },
-                    "to": user.fcm_token
-                },
-                config: { headers: { 'Content-Type': 'application/json' } },
-            })
-            .then(function (response) {
-                console.log(response)
-            })
-            .catch(function (error) {
-                console.log(error)
-            })
+            const token = user.fcm_token;
+            const message = {
+                "data": {
+                    "title": `Pesan Baru dari ${admin.nama}`,
+                    "message": `Ada Feedback Baru dari ${admin.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
+                    "sender_id": admin.id.toString(),
+                    "reciever_id": riwayatPasien.pasien.bidan.id.toString(),
+                    "routes": "/riwayat_submitted",
+                    "pasien_id": riwayatPasien.id.toString()
+                }
+            };
+            const options = {
+                "priority": "high",
+                "timeToLive": 86400
+            };
 
-            // await axios({
-            //     method: 'post',
-            //     headers: {
-            //         'Authorization': 'key=AAAA5uCovIc:APA91bGdU1-Mj3aY0DEoQA5P8lfLVVEIL-EFhIAJ1wnIrP5yylz-B0vMj9NDSwDssfamSDfee1sjGHOoD154w7Vf3-hILG_TkpimMoTwMKoy40kElgQjAA63aGSrFkJR3qCfJrHc3LX2'
-            //     },
-            //     url: 'https://fcm.googleapis.com/fcm/send',
-            //     data: {
-            //         "notification_type": "Nice Thoughts",
-            //         "to": user.fcm_token,
-            //         "mutable-content": true,
-            //         "data": { "riwayat_id": data.id },
-            //         "notification": {
-            //             "title": "Report Baru dari Bidan",
-            //             "body": `Feedback dari admin untuk pasien : ${data.pasien.nama}, Keluhan: ${data.kelompok_keluhan.nama}, silahkan cek aplikasi`,
-            //             "click_action": "FLUTTER_NOTIFICATION_CLICK",
-            //         }
-            //     },
-            //     config: { headers: { 'Content-Type': 'application/json' } },
-            // })
-            //     .then(function (response) {
-            //         console.log(response)
-
-            //     })
-            //     .catch(function (error) {
-            //         console.log(error)
-            //     })
+            await firebase.messaging().sendToDevice(token, message, options)
+            .then(response => {
+                console.log(response);
+            }).catch(error => {
+                console.log(error);
+            });
+            
             return { "success": true };
-
         } else {
             return { "success": false };
         }
     }
 
-    async feedback_anc(request: Request, response: Response, next: NextFunction) {
+    async feedback_anc(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let admin = await this.userRepo.findByHp(request.user.username);
         let data = await this.ancRepo.findOne({
             where: {

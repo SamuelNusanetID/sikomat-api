@@ -17,6 +17,11 @@ const requestIp = require('request-ip');
 require("dotenv").config();
 const moment = require("moment");
 const axios = require('axios')
+
+export interface IGetUserAuthInfoRequest extends Request {
+    user: any // or any other type
+}
+
 export class SuController {
     private suRepository = getCustomRepository(SuperUserRepository);
     private bidanRepo = getCustomRepository(BidanRepository);
@@ -45,7 +50,7 @@ export class SuController {
         return { "token": "", "message": "User tidak ditemukan" };
     }
 
-    async getAllBidan(request: Request, response: Response, next: NextFunction) {
+    async getAllBidan(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
@@ -67,7 +72,7 @@ export class SuController {
         return { "page": data };
     }
 
-    async saveBidan(request: Request, response: Response, next: NextFunction) {
+    async saveBidan(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
@@ -144,11 +149,14 @@ export class SuController {
         }
     }
 
-    async deleteBidan(request: Request, response: Response, next: NextFunction) {
+    async deleteBidan(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
-        let bidan = await this.bidanRepo.findOne({ id: await request.params['id'] })
+
+        let id = await parseInt(request.params['id']);
+
+        let bidan = await this.bidanRepo.findOne({ id: id });
 
         if (await this.bidanRepo.delete(bidan.id)) {
             let user = await this.userRepo.findOne({ hp: bidan.hp })
@@ -159,7 +167,7 @@ export class SuController {
         }
     }
 
-    async getAllSpesialis(request: Request, response: Response, next: NextFunction) {
+    async getAllSpesialis(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
@@ -179,7 +187,7 @@ export class SuController {
         return { "page": data };
     }
 
-    async saveSpesialis(request: Request, response: Response, next: NextFunction) {
+    async saveSpesialis(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
@@ -228,7 +236,10 @@ export class SuController {
     }
 
     async deleteSpesialis(request: Request, response: Response, next: NextFunction) {
-        let user = await this.userRepo.findOne({ id: await request.params['id'] })
+        let id = await parseInt(request.params['id']);
+
+        let user = await this.userRepo.findOne({ id: id })
+
         if (await this.userRepo.delete(user)) {
 
             return { "action_status": "success", "item": user, "message": "" };
@@ -256,7 +267,7 @@ export class SuController {
     //     return { "riwayat_pasien": data };
     // }
 
-    async riwayat(request: Request, response: Response, next: NextFunction) {
+    async riwayat(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });

@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import * as jwt from "jsonwebtoken";
-export const checkJwt = (req: Request, res: Response, next: NextFunction) => {
+
+export interface IGetUserAuthInfoRequest extends Request {
+  user: any // or any other type
+}
+
+export const checkJwt = (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers["authorization"]
   const token = authHeader && authHeader.split(" ")[1]
 
@@ -9,7 +14,6 @@ export const checkJwt = (req: Request, res: Response, next: NextFunction) => {
   jwt.verify(token, process.env.TOKEN_SECRET as string, (err: any, user: any) => {
     if (err) return res.sendStatus(403)
     console.log("Middle ware");
-    console.log(user);
     req.user = user
     next()
   })

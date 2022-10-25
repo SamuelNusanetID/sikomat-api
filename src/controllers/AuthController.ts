@@ -16,6 +16,10 @@ const moment = require("moment");
 const axios = require("axios");
 const bcrypt = require("bcryptjs");
 
+export interface IGetUserAuthInfoRequest extends Request {
+  user: any // or any other type
+}
+
 export class AuthController {
   private userRepository = getCustomRepository(UserRepository);
   private suRepository = getCustomRepository(SuperUserRepository);
@@ -315,7 +319,7 @@ export class AuthController {
     }
   }
 
-  async checkToken(request: Request, response: Response, next: NextFunction) {
+  async checkToken(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
     if (Date.now() >= request.user.exp * 1000) {
       return {
         msg: "Token Expired, Login Ulang",

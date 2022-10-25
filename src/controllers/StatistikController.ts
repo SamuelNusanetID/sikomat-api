@@ -1,7 +1,7 @@
 import { getCustomRepository, getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 
-import * as moment from "moment";
+import moment from "moment";
 import "moment/locale/id";
 import { getManager } from "typeorm";
 import { RiwayatPasien } from "../entity/RiwayatPasien";

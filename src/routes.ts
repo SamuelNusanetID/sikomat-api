@@ -18,6 +18,12 @@ export const Routes = [
     },
     {
         method: "get",
+        route: "/api/test/firebaseMessaging",
+        controller: TestController,
+        action: "firebaseMessagingTes"
+    },
+    {
+        method: "get",
         route: "/api/test/romawi",
         controller: TestController,
         action: "romawi"
@@ -242,9 +248,6 @@ export const Routes = [
         controller: AdminController,
         action: "anc"
     },
-
-
-
     {
         method: "post",
         route: "/api/su/auth",

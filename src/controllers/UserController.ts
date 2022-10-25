@@ -6,6 +6,11 @@ import { RiwayatPasien } from "../entity/RiwayatPasien";
 import { DaftarKeluhanPasien } from "../entity/DaftarKeluhanPasien";
 var fs = require("fs");
 var path = require("path");
+
+export interface IGetUserAuthInfoRequest extends Request {
+    user: any // or any other type
+}
+
 export class UserController {
 
     // private bidanRepo = getCustomRepository(BidanRepository);
@@ -20,19 +25,19 @@ export class UserController {
         return {};
     }
 
-    async fcmtoken(request: Request, response: Response, next: NextFunction) {
+    async fcmtoken(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let user = await this.userRepo.findOne({ hp: request.user.username });
         console.log("fcm Token: " + request.body['fcm_token'])
         user.fcm_token = request.body['fcm_token'];
         return await this.userRepo.save(user);
     }
 
-    async profile(request: Request, response: Response, next: NextFunction) {
+    async profile(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let payload = await this.userRepo.findOne({ hp: request.user.username });
         return payload;
     }
 
-    async update(request: Request, response: Response, next: NextFunction) {
+    async update(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let user = await this.userRepo.findOne({ hp: request.user.username });
         console.log("update user")
         console.log(request.body['hp']);

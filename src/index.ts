@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { createConnection } from "typeorm";
-import * as express from "express";
+import express = require("express");
 const moment = require("moment");
 var cors = require("cors");
 import * as bodyParser from "body-parser";
