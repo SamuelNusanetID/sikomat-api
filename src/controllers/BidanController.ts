@@ -352,34 +352,31 @@ export class BidanController {
 
         var i = 0;
         admins.forEach(async (user) => {
-            if (user.fcm_token !== null && user.user_type == 'admin') {
-                console.log(user.nama);
-                console.log(riwayatPasien.pasien.bidan.id);
-                console.log(user.id);
-                console.log(riwayatPasien.id);
-
-                message[i] = {
-                    "data": {
-                        "title": `Pesan Baru dari Bidan ${riwayatPasien.pasien.bidan.nama}`,
-                        "message": `Ada Feedback Baru dari Bidan ${riwayatPasien.pasien.bidan.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
-                        "sender_id": riwayatPasien.pasien.bidan.id.toString(),
-                        "reciever_id": user.id.toString(),
-                        "routes": "/riwayat_submitted",
-                        "pasien_id": riwayatPasien.id.toString()
-                    }
-                };
-                options[i] = {
-                    "priority": "high",
-                    "timeToLive": 86400
-                };
-
-                if (user.fcm_token !== "") {
+            if (user.user_type == 'admin') {
+                if (user.fcm_token) {
+                    console.log(user.fcm_token);
+                        message[i] = {
+                        "data": {
+                            "title": `Pesan Baru dari Bidan ${riwayatPasien.pasien.bidan.nama}`,
+                            "message": `Ada Feedback Baru dari Bidan ${riwayatPasien.pasien.bidan.nama} untuk Pasien ${riwayatPasien.pasien.nama}. Klik disini untuk melihat pesan.`,
+                            "sender_id": riwayatPasien.pasien.bidan.id.toString(),
+                            "reciever_id": user.id.toString(),
+                            "routes": "/riwayat_submitted",
+                            "pasien_id": riwayatPasien.id.toString()
+                        }
+                    };
+                    options[i] = {
+                        "priority": "high",
+                        "timeToLive": 86400
+                    };
+    
+                    
                     await firebase.messaging().sendToDevice(user.fcm_token, message[i], options[i])
-                .then(response => {
-                    console.log(response);
-                }).catch(error => {
-                    console.log(error);
-                });
+                    .then(response => {
+                        console.log(response);
+                    }).catch(error => {
+                        console.log(error);
+                    });
                 }
             }
             i++;
