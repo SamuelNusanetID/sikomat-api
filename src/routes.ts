@@ -249,73 +249,86 @@ export const Routes = [
         action: "anc"
     },
     {
-        method: "post",
-        route: "/api/su/auth",
-        controller: SuController,
-        action: "auth"
-    },
-    {
-        method: "get",
-        route: "/api/su/bidan/all",
-        controller: SuController,
-        action: "getAllBidan"
-    },
-
-    {
         method: "get",
         route: "/api/bidan/pasien/report/:riwayat_pasien",
         controller: ReportController,
         action: "riwayatKeluhanPasienReport"
     },
-
-    {
-        method: "post",
-        route: "/api/su/bidan/save",
-        controller: SuController,
-        action: "saveBidan"
-    },
-    {
-        method: "get",
-        route: "/api/su/bidan/delete/:id",
-        controller: SuController,
-        action: "deleteBidan"
-    },
-
-    {
-        method: "get",
-        route: "/api/su/spesialis/all",
-        controller: SuController,
-        action: "getAllSpesialis"
-    },
-    {
-        method: "get",
-        route: "/api/su/riwayat/all",
-        controller: SuController,
-        action: "riwayat"
-    },
-    {
-        method: "post",
-        route: "/api/su/spesialis/save",
-        controller: SuController,
-        action: "saveSpesialis"
-    },
-    {
-        method: "get",
-        route: "/api/su/spesialis/delete/:id",
-        controller: SuController,
-        action: "deleteSpesialis"
-    },
-    {
-        method: "get",
-        route: "/api/su/stats",
-        controller: StatistikController,
-        action: "stats"
-    },
-    
     {
         method: "get",
         route: "/api/report/qr/:text",
         controller: ReportController,
         action: "qr"
     },
+    // Superuser Login Authentication Endpoints
+    {
+        method: "post",
+        route: "/api/su/auth",
+        controller: SuController,
+        action: "auth"
+    },
+    // Superuser Dashboard Endpoints
+    {
+        method: "get",
+        route: "/api/su/stats",
+        controller: StatistikController,
+        action: "stats"
+    },
+    // Superuser Bidan Endpoints
+    {
+        method: "get",
+        route: "/api/su/bidan",
+        controller: SuController,
+        action: "getAllBidan"
+    },
+    {
+        method: "post",
+        route: "/api/su/bidan",
+        controller: SuController,
+        action: "saveBidan"
+    },
+    {
+        method: "delete",
+        route: "/api/su/bidan/:id",
+        controller: SuController,
+        action: "deleteBidan"
+    },
+    {
+        method: "post",
+        route: "/api/su/bidan/approve",
+        controller: SuController,
+        action: "approvedBidan"
+    },
+    // Superuser Spesialis Endpoints
+    {
+        method: "get",
+        route: "/api/su/spesialis",
+        controller: SuController,
+        action: "getAllSpesialis"
+    },
+    {
+        method: "post",
+        route: "/api/su/spesialis",
+        controller: SuController,
+        action: "saveSpesialis"
+    },
+    {
+        method: "get",
+        route: "/api/su/spesialis/:id",
+        controller: SuController,
+        action: "deleteSpesialis"
+    },
+    {
+        method: "post",
+        route: "/api/su/spesialis/approve",
+        controller: SuController,
+        action: "approvedSpesialis"
+    },
+    // Superuser Riwayat Pasien Endpoints
+    {
+        method: "get",
+        route: "/api/su/riwayat/all",
+        controller: SuController,
+        action: "riwayat"
+    }
 ];

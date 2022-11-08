@@ -13,7 +13,6 @@ export const checkJwt = (req: IGetUserAuthInfoRequest, res: Response, next: Next
 
   jwt.verify(token, process.env.TOKEN_SECRET as string, (err: any, user: any) => {
     if (err) return res.sendStatus(403)
-    console.log("Middle ware");
     req.user = user
     next()
   })

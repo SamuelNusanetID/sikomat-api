@@ -4,18 +4,18 @@ import { UserRepository } from "../repositories/UserRepository";
 import { Pasien } from "../entity/Pasien";
 import { RiwayatPasien } from "../entity/RiwayatPasien";
 import { DaftarKeluhanPasien } from "../entity/DaftarKeluhanPasien";
-import { BidanRepository } from "../repositories/BidanRepository";
+import { BidanRepository } from '../repositories/BidanRepository';
 import { isNull } from "util";
 import { Anc } from "../entity/Anc";
 import { SuperUserRepository } from "../repositories/SuperUserRepository";
 import { User } from "../entity/User";
+import moment from 'moment';
 var fs = require("fs");
 var path = require("path");
 const jwt = require("jsonwebtoken");
 const date = require('date-and-time')
 const requestIp = require('request-ip');
 require("dotenv").config();
-const moment = require("moment");
 const axios = require('axios')
 
 export interface IGetUserAuthInfoRequest extends Request {
@@ -32,7 +32,7 @@ export class SuController {
     private riwayatRepo = getRepository(RiwayatPasien);
 
     async auth(request: Request, response: Response, next: NextFunction) {
-        let su = await this.suRepository.findByUsernamePassword(request.body["username"], request.body["password"])
+        let su = await this.suRepository.findByUsernamePassword(request.body.username, request.body.password)
         let token = ""
         if (su != null) {
             const now = new Date();
@@ -76,7 +76,6 @@ export class SuController {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
-        console.log(await request.body['id']);
 
         if (await request.body['id']) {
             console.log("UPDATE")
@@ -85,8 +84,6 @@ export class SuController {
             console.log(bidan);
 
             if (bidan.hp == request.body['hp']) {
-                // Object.keys(request.body).forEach((k) => request.body[k] == "" && delete request.body[k]);
-                // bidan = request.body;
                 console.log("UPDATE HP SAMA")
                 bidan.email = request.body['email'];
                 bidan.nama = request.body['nama'];
@@ -123,7 +120,6 @@ export class SuController {
                     return { "action_status": "warn", "item": "", "message": "Bidan dengan email atau nomor hp sudah ada" };
                 }
             }
-
         } else {
             let bidan_check = await this.bidanRepo.find({
                 where: [{ hp: await request.body['hp'] }]
@@ -248,25 +244,6 @@ export class SuController {
         }
     }
 
-    // async riwayat(request: Request, response: Response, next: NextFunction) {
-    //     let su = await this.suRepository.findOne({
-    //         "username": request.user.username
-    //     });
-    //     let data = await this.riwayatRepo.find({
-
-    //         relations: ["pasien", "pasien.bidan", "kelompok_keluhan", "daftar_keluhan_pasien", 'daftar_keluhan_pasien.keluhan', 'daftar_keluhan_pasien.keluhan.daftar_keluhan'],
-    //         where: {
-    //             pasien: {
-    //                 bidan: { rekanan: su.user_type }
-    //             }
-    //         },
-    //         order: {
-    //             tanggal_periksa: "DESC",
-    //         },
-    //     })
-    //     return { "riwayat_pasien": data };
-    // }
-
     async riwayat(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let su = await this.suRepository.findOne({
             "username": request.user.username
@@ -290,5 +267,50 @@ export class SuController {
         }
 
         return { "page": data };
+    }
+
+    async approvedBidan(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
+        let now = new Date();
+        let bidanUser = await this.bidanRepo.findOne({
+            id: request.body.id
+        });
+    
+        if (bidanUser) {
+            let userFindBidan = await this.userRepo.findByHp(bidanUser.hp);
+            if (userFindBidan) {
+                userFindBidan.activation_date = new Date(Date.now());
+                userFindBidan.activation_request_date = new Date(Date.now());
+                userFindBidan.status = 1;
+                await this.userRepo.save(userFindBidan);
+
+                return { "action_status": "success", "item": userFindBidan, "message": "" };
+            } else {
+                return { "action_status": "failed", "item": userFindBidan, "message": "Data tidak dapat diperbaharui karena data bidan tidak ditemukan." };
+            }
+        } else {
+            return { "action_status": "failed", "item": bidanUser, "message": "Data tidak dapat diperbaharui karena data bidan tidak ditemukan." };
+        }
+    }
+    
+    async approvedSpesialis(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
+        let now = new Date();
+        let userFindSpesialis = await this.userRepo.find({
+            id: request.body.id
+        });
+
+        if (userFindSpesialis) {
+            if (userFindSpesialis[0].user_type == "admin") {
+                userFindSpesialis[0].activation_date = new Date(Date.now());
+                userFindSpesialis[0].activation_request_date = new Date(Date.now());
+                userFindSpesialis[0].status = 1;
+                await this.userRepo.save(userFindSpesialis);
+
+                return { "action_status": "success", "item": userFindSpesialis[0], "message": "" };
+            } else {
+                return { "action_status": "failed", "item": userFindSpesialis[0], "message": "Data tidak dapat diperbaharui karena data yang di inisiasi salah." };
+            }
+        } else {
+            return { "action_status": "failed", "item": userFindSpesialis[0], "message": "Data tidak dapat diperbaharui karena data spesialis tidak ditemukan." };
+        }
     }
 }

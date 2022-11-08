@@ -57,7 +57,7 @@ createConnection()
     const app = express();
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(express.json());
-    app.use(cors())
+    // app.use(cors())
     app.use(pagination);
     //app.use(express.static("public"))
     // app.use("/public/", express.static("./public"));
