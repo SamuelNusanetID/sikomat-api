@@ -1,22 +1,19 @@
-import { Equal, getCustomRepository, getRepository, IsNull, Like, Not, Repository, Transaction, TransactionRepository } from "typeorm";
+import { getCustomRepository, getRepository, Like } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import { UserRepository } from "../repositories/UserRepository";
-import { Pasien } from "../entity/Pasien";
 import { RiwayatPasien } from "../entity/RiwayatPasien";
-import { DaftarKeluhanPasien } from "../entity/DaftarKeluhanPasien";
 import { BidanRepository } from '../repositories/BidanRepository';
-import { isNull } from "util";
-import { Anc } from "../entity/Anc";
 import { SuperUserRepository } from "../repositories/SuperUserRepository";
 import { User } from "../entity/User";
-import moment from 'moment';
+import moment from "moment";
 var fs = require("fs");
 var path = require("path");
 const jwt = require("jsonwebtoken");
 const date = require('date-and-time')
 const requestIp = require('request-ip');
 require("dotenv").config();
-const axios = require('axios')
+const axios = require('axios');
+const bcrypt = require("bcryptjs");
 
 export interface IGetUserAuthInfoRequest extends Request {
     user: any // or any other type
@@ -34,7 +31,7 @@ export class SuController {
     async auth(request: Request, response: Response, next: NextFunction) {
         let su = await this.suRepository.findByUsernamePassword(request.body.username, request.body.password)
         let token = ""
-        if (su != null) {
+        if (su) {
             const now = new Date();
             token = await this.generateAccessToken({ username: request.body["username"] });
             let auth = {
@@ -54,91 +51,119 @@ export class SuController {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
-        console.log(su);
         let data = {}
         let keyword = request.query['keyword'];
         if (request.query['keyword']) {
-            console.log(request.query['keyword']);
             data = await this.bidanRepo.createQueryBuilder('bidan')
+                .innerJoinAndMapOne("bidan.user", User, 'user', 'bidan.hp = user.hp')
                 .where("(hp ilike :keyword or nama ilike :keyword) and rekanan = :rekanan ", { keyword: `%${keyword}%`, rekanan: su.user_type })
-                .paginate();
-            console.log(this.bidanRepo.createQueryBuilder('bidan')
-                .where("(hp ilike :keyword or nama ilike :keyword) and rekanan = :rekanan ", { keyword: `%${keyword}%`, rekanan: su.user_type })
-                .getSql())
+                .orderBy('bidan.id', 'DESC')
+                .getMany();
         } else {
-            data = await this.bidanRepo.createQueryBuilder('bidan').where("rekanan = :rekanan ", { rekanan: su.user_type })
-                .paginate();
+            data = await this.bidanRepo.createQueryBuilder('bidan')
+                .innerJoinAndMapOne("bidan.user", User, 'user', 'bidan.hp = user.hp')
+                .where("rekanan = :rekanan ", { rekanan: su.user_type })
+                .orderBy('bidan.id', 'DESC')
+                .getMany();
         }
-        return { "page": data };
+
+        return { "data_bidan": data };
     }
 
     async saveBidan(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
+        var salt = bcrypt.genSaltSync(10);
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
 
-        if (await request.body['id']) {
-            console.log("UPDATE")
-            let bidan = await this.bidanRepo.findOne({ id: request.body['id'] })
+        if (await request.body.id) {
+            let bidan = await this.bidanRepo.findOne({ id: request.body.id });
 
-            console.log(bidan);
-
-            if (bidan.hp == request.body['hp']) {
-                console.log("UPDATE HP SAMA")
-                bidan.email = request.body['email'];
-                bidan.nama = request.body['nama'];
-                bidan.hp = request.body['hp'];
-                bidan.alamat_detail = request.body['alamat_detail'];
-                bidan.alamat_peta = request.body['alamat_peta'];
-                console.log(bidan);
-
-                return { "action_status": "success", "item": await this.bidanRepo.save(bidan), "message": "" };
-            } else {
-                console.log("UPDATE HP BEDA")
-                let bidan_check = await this.bidanRepo.find({
-                    where: [{ hp: await request.body['hp'] }]
-                });
-                let user_check = await this.userRepo.find({
-                    where: [{ hp: await request.body['hp'] }]
-                });
-                if (bidan_check.length == 0 && user_check.length == 0) {
-                    console.log("HP FOUND")
-                    console.log(request.body)
-                    let user = await this.userRepo.findOne({ hp: bidan.hp })
-                    //Object.keys(request.body).forEach((k) => request.body[k] == "" && delete request.body[k]);
-                    bidan.nama = request.body['nama'];
-                    bidan.email = request.body['email'];
-                    bidan.hp = request.body['hp'];
-                    bidan.alamat_detail = request.body['alamat_detail'];
-                    bidan.alamat_peta = request.body['alamat_peta'];
-
-                    user.hp = bidan.hp
-                    user.nama = bidan.nama
-                    this.userRepo.save(user)
-                    return { "action_status": "success", "item": await this.bidanRepo.save(bidan), "message": "" };
+            if (bidan) {
+                if (bidan.hp == request.body.hp) {
+                    bidan.email = request.body.email;
+                    bidan.nama = request.body.nama;
+                    bidan.hp = request.body.hp;
+                    bidan.alamat_detail = request.body.alamat_detail;
+                    bidan.alamat_peta = request.body.alamat_peta;
+                    
+                    try {
+                        let itemBidan = await this.bidanRepo.save(bidan)
+                        return { "action_status": "success", "item": itemBidan, "message": "" };
+                    } catch (error) {
+                        return { "action_status": "success", "item": "", "message": error };
+                    }                
                 } else {
-                    return { "action_status": "warn", "item": "", "message": "Bidan dengan email atau nomor hp sudah ada" };
+                    let bidan_check = await this.bidanRepo.find({
+                        where: [{ hp: await request.body.hp }]
+                    });
+    
+                    let user_check = await this.userRepo.find({
+                        where: [{ hp: await request.body.hp }]
+                    });
+    
+                    if (bidan_check.length == 0 && user_check.length == 0) {
+                        let user = await this.userRepo.findOne({ hp: bidan.hp })
+                        bidan.nama = request.body.nama;
+                        bidan.email = request.body.email;
+                        bidan.hp = request.body.hp;
+                        bidan.alamat_detail = request.body.alamat_detail;
+                        bidan.alamat_peta = request.body.alamat_peta;
+    
+                        user.hp = bidan.hp
+                        user.nama = bidan.nama
+    
+                        try {
+                            await this.userRepo.save(user)
+                            let itemBidan = await this.bidanRepo.save(bidan)
+                            return { "action_status": "success", "item": itemBidan, "message": "" };
+                        } catch (error) {
+                            return { "action_status": "warn", "item": "", "message": error };
+                        }
+                    } else {
+                        return { "action_status": "warn", "item": "", "message": "Data bidan sudah ada" };
+                    }
                 }
+            } else {
+                return { "action_status": "warn", "item": "", "message": "Data bidan tidak ada" };
             }
+            
         } else {
+            let itemBidan;
             let bidan_check = await this.bidanRepo.find({
-                where: [{ hp: await request.body['hp'] }]
+                where: [{ 
+                    nama: await request.body.nama, 
+                    alamat_peta: await request.body.alamat_peta, 
+                    alamat_detail: await request.body.alamat_detail, 
+                    hp: await request.body.hp,
+                }]
             });
             let user_check = await this.userRepo.find({
-                where: [{ hp: await request.body['hp'] }]
+                where: [{ 
+                    nama: await request.body.nama,
+                    hp: await request.body.hp,
+                }]
             });
-            console.log(bidan_check);
+            
             if (bidan_check.length == 0 && user_check.length == 0) {
-                console.log("ADD");
                 let newBidan = await request.body;
-                newBidan.rekanan = su.user_type
-                let newUser = new User()
-                newUser.hp = newBidan.hp
-                newUser.user_type = "bidan"
-                newUser.nama = newBidan.nama
-                this.userRepo.save(newUser)
                 Object.keys(newBidan).forEach((k) => newBidan[k] == "" && delete newBidan[k]);
-                return { "action_status": "success", "item": await this.bidanRepo.save(newBidan), "message": "" };
+
+                try {
+                    newBidan.rekanan = su.user_type;
+                    itemBidan = await this.bidanRepo.save(newBidan)
+
+                    let newUser = new User();
+                    newUser.hp = newBidan.hp;
+                    newUser.user_type = "bidan";
+                    newUser.nama = newBidan.nama;
+                    newUser.password = bcrypt.hashSync(request.body.password, salt);
+                    await this.userRepo.save(newUser);
+                } catch (error) {
+                    return { "action_status": "warn", "item": "", "message": error };
+                }
+
+                return { "action_status": "success", "item": itemBidan, "message": "" };
             } else {
                 return { "action_status": "warn", "item": "", "message": "Bidan dengan email atau nomor hp sudah ada" };
             }
@@ -153,80 +178,112 @@ export class SuController {
         let id = await parseInt(request.params['id']);
 
         let bidan = await this.bidanRepo.findOne({ id: id });
-
-        if (await this.bidanRepo.delete(bidan.id)) {
-            let user = await this.userRepo.findOne({ hp: bidan.hp })
-            await this.userRepo.delete(user.id);
-            return { "action_status": "success", "item": bidan, "message": "" };
+        
+        if (bidan) {
+            if (await this.bidanRepo.delete(bidan.id)) {
+                let user = await this.userRepo.findOne({ hp: bidan.hp })
+                await this.userRepo.delete(user.id);
+                return { "action_status": "success", "item": bidan, "message": "" };
+            } 
         } else {
             return { "action_status": "failed", "item": bidan, "message": "Data Tidak dapat dihapus karena bidan sudah melakukan aktivitas" };
         }
+        
     }
 
     async getAllSpesialis(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
-        console.log(su);
+        
         let data = {}
         let keyword = request.query['keyword'];
+
         if (request.query['keyword']) {
             console.log(request.query['keyword']);
             data = await this.userRepo.createQueryBuilder('user')
                 .where("(hp ilike :keyword or nama ilike :keyword) and user_type=:user_type", { keyword: `%${keyword}%`, user_type: 'admin' })
-                .paginate();
+                .orderBy('user.id', 'DESC')
+                .getMany();
 
         } else {
-            data = await this.userRepo.createQueryBuilder('user').where("user_type= :user_type", { user_type: "admin" })
-                .paginate();
+            data = await this.userRepo.createQueryBuilder('user')
+                .where("user_type= :user_type", { user_type: "admin" })
+                .orderBy('user.id', 'DESC')
+                .getMany();
         }
-        return { "page": data };
+
+        return { "data_spesialis": data };
     }
 
     async saveSpesialis(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {
+        var salt = bcrypt.genSaltSync(10);
+        var now = new Date();
+        
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
-        console.log(await request.body['id']);
+    
+        if (await request.body.id) {
+            let user = await this.userRepo.findOne({ id: request.body.id })
 
-        if (await request.body['id']) {
-            console.log("UPDATE")
-            let user = await this.userRepo.findOne({ id: request.body['id'] })
-
-            console.log(user);
-
-            if (user.email == request.body['email'] && user.hp == request.body['hp']) {
-                Object.keys(request.body).forEach((k) => request.body[k] == "" && delete request.body[k]);
-                user = request.body;
-                return { "action_status": "success", "item": await this.userRepo.save(user), "message": "" };
-            } else {
-                let user_check = await this.userRepo.find({
-                    where: [{ hp: await request.body['hp'], email: await request.body['email'] }]
-                });
-                if (user_check.length == 0) {
+            if (user) {
+                if (user.email == request.body.email && user.hp == request.body.hp) {
                     Object.keys(request.body).forEach((k) => request.body[k] == "" && delete request.body[k]);
                     user = request.body;
-                    return { "action_status": "success", "item": await this.userRepo.save(user), "message": "" };
+
+                    try {
+                        let itemUser = await this.userRepo.save(user);
+                        return { "action_status": "success", "item": itemUser, "message": "" };
+                    } catch (error) {
+                        return { "action_status": "success", "item": "", "message": error };
+                    }
                 } else {
-                    return { "action_status": "warn", "item": "", "message": "Spesialis dengan email atau nomor hp sudah ada" };
+                    let user_check = await this.userRepo.find({
+                        where: [{ nama: Like(request.body.nama), hp: Like(request.body.hp) }]
+                    });
+
+                    if (user_check.length == 0) {
+                        Object.keys(request.body).forEach((k) => request.body[k] == "" && delete request.body[k]);
+                        user = request.body;
+
+                        try {
+                            let itemUser = await this.userRepo.save(user);
+                            return { "action_status": "success", "item": itemUser, "message": "" };
+                        } catch (error) {
+                            return { "action_status": "success", "item": "", "message": error };
+                        }
+                    } else {
+                        return { "action_status": "warn", "item": "", "message": "Data spesialis sudah ada" };
+                    }
                 }
+            } else {
+                return { "action_status": "warn", "item": "", "message": "Data spesialis sudah ada" };
             }
-
         } else {
-
-            let user_check = await this.userRepo.find({
-                where: [{ hp: await request.body['hp'], email: await request.body['email'] }]
+            const user_check = await this.userRepo.find({
+                where: [{ nama: Like(request.body.nama), hp: Like(request.body.hp) }]
             });
-            if (user_check.length == 0) {
-                console.log("ADD");
 
-                let newUser = request.body
-                newUser.user_type = "admin"
+            if (user_check.length < 1) {
+                let newUser = await request.body;
+        
+                newUser.password = bcrypt.hashSync(request.body.password, salt);
+                newUser.user_type = "admin";
+                newUser.status = 1;
+                newUser.activation_request_date = moment(now).format("YYYY-MM-DD HH:mm:ss");
+                newUser.activation_date = moment(now).format("YYYY-MM-DD HH:mm:ss");
+
                 Object.keys(newUser).forEach((k) => newUser[k] == "" && delete newUser[k]);
 
-                return { "action_status": "success", "item": await this.userRepo.save(newUser), "message": "" };
+                try {
+                    let item = await this.userRepo.save(newUser)
+                    return { "action_status": "success", "item": item, "message": "" };
+                } catch (error) {
+                    return { "action_status": "warn", "item": "", "message": error };
+                }
             } else {
-                return { "action_status": "warn", "item": "", "message": "Spesialis dengan email atau nomor hp sudah ada" };
+                return { "action_status": "warn", "item": "", "message": "Data spesialis sudah ada" };
             }
         }
     }
@@ -236,10 +293,10 @@ export class SuController {
 
         let user = await this.userRepo.findOne({ id: id })
 
-        if (await this.userRepo.delete(user)) {
-
+        try {
+            await this.userRepo.delete(user)
             return { "action_status": "success", "item": user, "message": "" };
-        } else {
+        } catch (error) {
             return { "action_status": "failed", "item": user, "message": "Data Tidak dapat dihapus karena bidan sudah melakukan aktivitas" };
         }
     }
@@ -250,23 +307,23 @@ export class SuController {
         });
         let keyword = request.query['keyword'];
         let data = {}
-        console.log(su);
+        
         if (request.query['keyword']) {
             data = await this.riwayatRepo.createQueryBuilder('riwayat_pasien')
                 .innerJoinAndSelect("riwayat_pasien.pasien", "pasien")
                 .innerJoinAndSelect("pasien.bidan", "bidan")
                 .innerJoinAndSelect("riwayat_pasien.kelompok_keluhan", "kelompok_keluhan")
                 .where("pasien.nama ilike :keyword or bidan.nama ilike :keyword or bidan.nama ilike :keyword or bidan.hp ilike :keyword", { keyword: `%${keyword}%` })
-                .paginate();
+                .getMany();
         } else {
             data = await this.riwayatRepo.createQueryBuilder('riwayat_pasien')
                 .innerJoinAndSelect("riwayat_pasien.pasien", "pasien")
                 .innerJoinAndSelect("pasien.bidan", "bidan")
                 .innerJoinAndSelect("riwayat_pasien.kelompok_keluhan", "kelompok_keluhan")
-                .paginate();
+                .getMany();
         }
 
-        return { "page": data };
+        return { "data_riwayat": data };
     }
 
     async approvedBidan(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {

@@ -313,7 +313,7 @@ export const Routes = [
         action: "saveSpesialis"
     },
     {
-        method: "get",
+        method: "delete",
         route: "/api/su/spesialis/:id",
         controller: SuController,
         action: "deleteSpesialis"

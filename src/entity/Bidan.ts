@@ -1,7 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import { Pasien } from "./Pasien";
 
-
 @Entity()
 export class Bidan {
 
@@ -65,5 +64,4 @@ export class Bidan {
         nullable: true,
     })
     rekanan: string;
-
 }
