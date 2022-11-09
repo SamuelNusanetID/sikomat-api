@@ -230,13 +230,13 @@ export class SuController {
             if (user) {
                 if (user.email == request.body.email && user.hp == request.body.hp) {
                     Object.keys(request.body).forEach((k) => request.body[k] == "" && delete request.body[k]);
-                    user = request.body;
+                    user.nama = request.body.nama;
 
                     try {
                         let itemUser = await this.userRepo.save(user);
                         return { "action_status": "success", "item": itemUser, "message": "" };
                     } catch (error) {
-                        return { "action_status": "success", "item": "", "message": error };
+                        return { "action_status": "warn", "item": "", "message": error };
                     }
                 } else {
                     let user_check = await this.userRepo.find({
@@ -245,13 +245,14 @@ export class SuController {
 
                     if (user_check.length == 0) {
                         Object.keys(request.body).forEach((k) => request.body[k] == "" && delete request.body[k]);
-                        user = request.body;
-
+                        user.nama = request.body.nama;
+                        user.hp = request.body.hp;
+                        
                         try {
                             let itemUser = await this.userRepo.save(user);
                             return { "action_status": "success", "item": itemUser, "message": "" };
                         } catch (error) {
-                            return { "action_status": "success", "item": "", "message": error };
+                            return { "action_status": "warn", "item": "", "message": error };
                         }
                     } else {
                         return { "action_status": "warn", "item": "", "message": "Data spesialis sudah ada" };
