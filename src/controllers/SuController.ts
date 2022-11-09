@@ -315,12 +315,14 @@ export class SuController {
                 .innerJoinAndSelect("pasien.bidan", "bidan")
                 .innerJoinAndSelect("riwayat_pasien.kelompok_keluhan", "kelompok_keluhan")
                 .where("pasien.nama ilike :keyword or bidan.nama ilike :keyword or bidan.nama ilike :keyword or bidan.hp ilike :keyword", { keyword: `%${keyword}%` })
+                .orderBy('riwayat_pasien.id', 'DESC')
                 .getMany();
         } else {
             data = await this.riwayatRepo.createQueryBuilder('riwayat_pasien')
                 .innerJoinAndSelect("riwayat_pasien.pasien", "pasien")
                 .innerJoinAndSelect("pasien.bidan", "bidan")
                 .innerJoinAndSelect("riwayat_pasien.kelompok_keluhan", "kelompok_keluhan")
+                .orderBy('riwayat_pasien.id', 'DESC')
                 .getMany();
         }
 
