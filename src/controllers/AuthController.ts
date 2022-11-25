@@ -284,9 +284,10 @@ export class AuthController {
         password: hashPassword,
         email: null,
         user_type: "bidan",
-        status: 0,
+        status: 1,
         fcm_token: fcm_token,
         activation_request_date: moment(now).format("YYYY-MM-DD HH:mm:ss"),
+        activation_date: moment(now).format("YYYY-MM-DD HH:mm:ss")
       });
       console.log(savedDataPasien);
 
