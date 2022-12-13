@@ -57,7 +57,7 @@ export class Bidan {
     })
     status: number;
 
-    @OneToMany(type => Pasien, pasien => pasien.bidan)
+    @OneToMany(type => Pasien, pasien => pasien.bidan, {onDelete: 'CASCADE'})
     pasien: Pasien[];
 
     @Column({

@@ -6,6 +6,8 @@ import { BidanRepository } from '../repositories/BidanRepository';
 import { SuperUserRepository } from "../repositories/SuperUserRepository";
 import { User } from "../entity/User";
 import moment from "moment";
+import { Pasien } from '../entity/Pasien';
+import { PasienRepository } from "../repositories/PasienRepostiroy";
 var fs = require("fs");
 var path = require("path");
 const jwt = require("jsonwebtoken");
@@ -21,6 +23,7 @@ export interface IGetUserAuthInfoRequest extends Request {
 
 export class SuController {
     private suRepository = getCustomRepository(SuperUserRepository);
+    private pasienRepo = getCustomRepository(PasienRepository);
     private bidanRepo = getCustomRepository(BidanRepository);
     private userRepo = getCustomRepository(UserRepository);
     async generateAccessToken(username) {
@@ -174,21 +177,18 @@ export class SuController {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
-
         let id = await parseInt(request.params['id']);
-
-        let bidan = await this.bidanRepo.findOne({ id: id });
-        
+        let bidan = await this.bidanRepo.findOne({id: id});
         if (bidan) {
-            if (await this.bidanRepo.delete(bidan.id)) {
-                let user = await this.userRepo.findOne({ hp: bidan.hp })
-                await this.userRepo.delete(user.id);
-                return { "action_status": "success", "item": bidan, "message": "" };
-            } 
+            try {
+                await this.bidanRepo.delete({id: id});
+                return { "action_status": "success", "item": [], "message": "Berhasil menghapus data bidan." };
+            } catch (error) {
+                return { "action_status": "failed", "item": [], "message": error.detail };
+            }
         } else {
-            return { "action_status": "failed", "item": bidan, "message": "Data Tidak dapat dihapus karena bidan sudah melakukan aktivitas" };
+            return { "action_status": "failed", "item": [], "message": "Data Tidak dapat dihapus karena data bidan tidak ditemukan." };
         }
-        
     }
 
     async getAllSpesialis(request: IGetUserAuthInfoRequest, response: Response, next: NextFunction) {

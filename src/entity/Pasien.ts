@@ -228,11 +228,11 @@ export class Pasien {
     })
     jarak_rumah: number;
 
-    @ManyToOne(type => Bidan)
+    @ManyToOne(type => Bidan,{onDelete: 'CASCADE'})
     @JoinColumn({ name: "bidan" })
     bidan: Bidan;
 
-    @OneToMany(type => RiwayatPasien, riwayat => riwayat.pasien)
+    @OneToMany(type => RiwayatPasien, riwayat => riwayat.pasien, {onDelete: 'CASCADE'})
     riwayat: RiwayatPasien[];
 
 

@@ -87,7 +87,6 @@ export class RiwayatPasien {
     })
     anc_spesialis: string;
 
-
     @Column({
         nullable: true,
         default: ""
@@ -112,11 +111,11 @@ export class RiwayatPasien {
     })
     riwayat_persalinan: string;
 
-    @ManyToOne(type => Pasien)
+    @ManyToOne(type => Pasien,{onDelete: 'CASCADE'})
     @JoinColumn({ name: "pasien" })
     pasien: Pasien;
 
-    @OneToMany(type => DaftarKeluhanPasien, daftar_keluhan_pasien => daftar_keluhan_pasien.riwayat_pasien)
+    @OneToMany(type => DaftarKeluhanPasien, daftar_keluhan_pasien => daftar_keluhan_pasien.riwayat_pasien,{onDelete: 'CASCADE'})
     daftar_keluhan_pasien: DaftarKeluhanPasien[];
 
     @ManyToOne(type => KelompokKeluhan)

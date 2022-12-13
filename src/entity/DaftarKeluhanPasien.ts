@@ -10,7 +10,7 @@ export class DaftarKeluhanPasien {
     id: number;
 
 
-    @ManyToOne(type => RiwayatPasien)
+    @ManyToOne(type => RiwayatPasien,{onDelete: 'CASCADE'})
     @JoinColumn({ name: "riwayat_pasien" })
     riwayat_pasien: RiwayatPasien;
 

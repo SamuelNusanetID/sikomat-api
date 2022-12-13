@@ -9,11 +9,11 @@ export class Skreening {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(type => Anc)
+    @ManyToOne(type => Anc,{onDelete: 'CASCADE'})
     @JoinColumn({ name: "anc" })
     anc: Anc;
 
-    @ManyToOne(type => Keluhan)
+    @ManyToOne(type => Keluhan,{onDelete: 'CASCADE'})
     @JoinColumn({ name: "keluhan" })
     keluhan: Keluhan;
 

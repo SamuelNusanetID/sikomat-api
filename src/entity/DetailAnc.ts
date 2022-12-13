@@ -9,7 +9,7 @@ export class DetailAnc {
     id: number;
 
 
-    @ManyToOne(type => Anc)
+    @ManyToOne(type => Anc,{onDelete: 'CASCADE'})
     @JoinColumn({ name: "anc" })
     anc: Anc;
 

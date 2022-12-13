@@ -14,7 +14,7 @@ export class Anc {
     id: number;
 
 
-    @ManyToOne(type => Pasien)
+    @ManyToOne(type => Pasien,{onDelete: 'CASCADE'})
     @JoinColumn({ name: "pasien" })
     pasien: Pasien;
 

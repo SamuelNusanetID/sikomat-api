@@ -6,27 +6,13 @@ import { RefController } from "./controllers/RefController";
 import { ReportController } from "./controllers/ReportController";
 import { StatistikController } from "./controllers/StatistikController";
 import { SuController } from "./controllers/SuController";
-import { TelegramController } from "./controllers/TelegramController";
-import { TestController } from "./controllers/TestController";
 import { UserController } from "./controllers/UserController";
 export const Routes = [
     {
         method: "get",
-        route: "/api/test",
-        controller: TestController,
-        action: "get"
-    },
-    {
-        method: "get",
-        route: "/api/test/firebaseMessaging",
-        controller: TestController,
-        action: "firebaseMessagingTes"
-    },
-    {
-        method: "get",
-        route: "/api/test/romawi",
-        controller: TestController,
-        action: "romawi"
+        route: "/api/report/qr/:text",
+        controller: ReportController,
+        action: "qr"
     },
     {
         method: "get",
@@ -34,50 +20,108 @@ export const Routes = [
         controller: AuthController,
         action: "checkToken"
     },
-    // {
-    //     method: "post",
-    //     route: "/api/auth/bidan/login",
-    //     controller: AuthController,
-    //     action: "loginBidan"
-    // },
-
+    {
+        method: "post",
+        route: "/api/login",
+        controller: AuthController,
+        action: "login"
+    },
+    {
+        method: "post",
+        route: "/api/register",
+        controller: AuthController,
+        action: "register"
+    },
     {
         method: "get",
         route: "/api/bidan/profile",
         controller: BidanController,
         action: "profile"
     },
-
     {
         method: "get",
         route: "/api/bidan/anc/:pasien",
         controller: BidanController,
         action: "getAnc"
     },
-
     {
         method: "post",
         route: "/api/bidan/anc/add",
         controller: BidanController,
         action: "addAnc"
     },
-
-
     {
         method: "post",
         route: "/api/bidan/anc/skreening/add",
         controller: BidanController,
         action: "addSkreening"
     },
-
     {
         method: "post",
         route: "/api/bidan/anc/detail/add",
         controller: BidanController,
         action: "addDetailAnc"
     },
-
-
+    {
+        method: "post",
+        route: "/api/bidan/update",
+        controller: BidanController,
+        action: "update"
+    },
+    {
+        method: "get",
+        route: "/api/bidan/pasien/report/:riwayat_pasien",
+        controller: ReportController,
+        action: "riwayatKeluhanPasienReport"
+    },
+    {
+        method: "post",
+        route: "/api/bidan/pasien/add",
+        controller: BidanController,
+        action: "pasienAdd"
+    },
+    {
+        method: "get",
+        route: "/api/bidan/pasien/list",
+        controller: BidanController,
+        action: "pasienList"
+    },
+    {
+        method: "post",
+        route: "/api/bidan/pasien/riwayat/add",
+        controller: BidanController,
+        action: "riwayatPasienAdd"
+    },
+    {
+        method: "get",
+        route: "/api/bidan/pasien/riwayat/feedback/unread",
+        controller: BidanController,
+        action: "unread"
+    },
+    {
+        method: "get",
+        route: "/api/bidan/pasien/riwayat/feedback/read/:id",
+        controller: BidanController,
+        action: "feebackRead"
+    },
+    {
+        method: "get",
+        route: "/api/bidan/pasien/riwayat/get/:riwayat_pasien",
+        controller: BidanController,
+        action: "riwayatKeluhanPasienGet"
+    },
+    {
+        method: "get",
+        route: "/api/bidan/pasien/riwayat/partograf/:path",
+        controller: BidanController,
+        action: "getPartograf"
+    },
+    {
+        method: "post",
+        route: "/api/bidan/pasien/keluhan/add",
+        controller: BidanController,
+        action: "keluhanPasienAdd"
+    },
     {
         method: "get",
         route: "/api/ref/kelompokkeluhan",
@@ -97,14 +141,6 @@ export const Routes = [
         controller: RefController,
         action: "keluhan"
     },
-
-    {
-        method: "post",
-        route: "/api/bidan/update",
-        controller: BidanController,
-        action: "update"
-    },
-
     {
         method: "post",
         route: "/api/user/update",
@@ -117,86 +153,6 @@ export const Routes = [
         controller: UserController,
         action: "fcmtoken"
     },
-
-    {
-        method: "post",
-        route: "/api/bidan/pasien/add",
-        controller: BidanController,
-        action: "pasienAdd"
-    },
-    {
-        method: "get",
-        route: "/api/bidan/pasien/list",
-        controller: BidanController,
-        action: "pasienList"
-    },
-
-    {
-        method: "post",
-        route: "/api/bidan/pasien/riwayat/add",
-        controller: BidanController,
-        action: "riwayatPasienAdd"
-    },
-
-    {
-        method: "get",
-        route: "/api/bidan/pasien/riwayat/feedback/unread",
-        controller: BidanController,
-        action: "unread"
-    },
-
-    {
-        method: "get",
-        route: "/api/bidan/pasien/riwayat/feedback/read/:id",
-        controller: BidanController,
-        action: "feebackRead"
-    },
-
-    {
-        method: "get",
-        route: "/api/bidan/pasien/riwayat/get/:riwayat_pasien",
-        controller: BidanController,
-        action: "riwayatKeluhanPasienGet"
-    },
-
-    {
-        method: "get",
-        route: "/api/bidan/pasien/riwayat/partograf/:path",
-        controller: BidanController,
-        action: "getPartograf"
-    },
-
-    {
-        method: "post",
-        route: "/api/bidan/pasien/keluhan/add",
-        controller: BidanController,
-        action: "keluhanPasienAdd"
-    },
-
-    {
-        method: "post",
-        route: "/api/aktivasi",
-        controller: AuthController,
-        action: "aktivasi"
-    },
-    {
-        method: "post",
-        route: "/api/login",
-        controller: AuthController,
-        action: "login"
-    },
-    {
-        method: "post",
-        route: "/api/register",
-        controller: AuthController,
-        action: "register"
-    },
-    // {
-    //     method: "post",
-    //     route: "/api/verifylogin",
-    //     controller: AuthController,
-    //     action: "verifylogin"
-    // },
     {
         method: "get",
         route: "/api/user/profile",
@@ -209,7 +165,6 @@ export const Routes = [
         controller: AdminController,
         action: "incoming"
     },
-
     {
         method: "get",
         route: "/api/admin/riwayat",
@@ -228,14 +183,12 @@ export const Routes = [
         controller: AdminController,
         action: "findbidan"
     },
-
     {
         method: "post",
         route: "/api/admin/riwayat/feedback",
         controller: AdminController,
         action: "feedback"
     },
-
     {
         method: "post",
         route: "/api/admin/anc/feedback",
@@ -249,32 +202,17 @@ export const Routes = [
         action: "anc"
     },
     {
-        method: "get",
-        route: "/api/bidan/pasien/report/:riwayat_pasien",
-        controller: ReportController,
-        action: "riwayatKeluhanPasienReport"
-    },
-    {
-        method: "get",
-        route: "/api/report/qr/:text",
-        controller: ReportController,
-        action: "qr"
-    },
-    // Superuser Login Authentication Endpoints
-    {
         method: "post",
         route: "/api/su/auth",
         controller: SuController,
         action: "auth"
     },
-    // Superuser Dashboard Endpoints
     {
         method: "get",
         route: "/api/su/stats",
         controller: StatistikController,
         action: "stats"
     },
-    // Superuser Bidan Endpoints
     {
         method: "get",
         route: "/api/su/bidan",
@@ -299,7 +237,6 @@ export const Routes = [
         controller: SuController,
         action: "approvedBidan"
     },
-    // Superuser Spesialis Endpoints
     {
         method: "get",
         route: "/api/su/spesialis",
@@ -324,7 +261,6 @@ export const Routes = [
         controller: SuController,
         action: "approvedSpesialis"
     },
-    // Superuser Riwayat Pasien Endpoints
     {
         method: "get",
         route: "/api/su/riwayat/all",
