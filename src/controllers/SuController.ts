@@ -54,21 +54,14 @@ export class SuController {
         let su = await this.suRepository.findOne({
             "username": request.user.username
         });
+        
         let data = {}
-        let keyword = request.query['keyword'];
-        if (request.query['keyword']) {
-            data = await this.bidanRepo.createQueryBuilder('bidan')
+
+        data = await this.bidanRepo.createQueryBuilder('bidan')
                 .innerJoinAndMapOne("bidan.user", User, 'user', 'bidan.hp = user.hp')
-                .where("(hp ilike :keyword or nama ilike :keyword) and rekanan = :rekanan ", { keyword: `%${keyword}%`, rekanan: su.user_type })
+                .where('user.user_type = :utype', {utype: 'bidan'})
                 .orderBy('bidan.id', 'DESC')
                 .getMany();
-        } else {
-            data = await this.bidanRepo.createQueryBuilder('bidan')
-                .innerJoinAndMapOne("bidan.user", User, 'user', 'bidan.hp = user.hp')
-                .where("rekanan = :rekanan ", { rekanan: su.user_type })
-                .orderBy('bidan.id', 'DESC')
-                .getMany();
-        }
 
         return { "data_bidan": data };
     }
@@ -377,24 +370,34 @@ export class SuController {
     async getDataBidanByID(request: Request, response: Response, next: NextFunction) {
         let id = await parseInt(request.params['id']);
         
-        let dataBidanByID = await this.bidanRepo.findOne({
-            where: {
-                id: id
-            }
-        })
+        let dataBidanByID = await this.bidanRepo.count({
+            id: id
+        });
 
-        return { "data_bidan": dataBidanByID };
+        if (dataBidanByID > 0) {
+            return { "data_bidan": await this.bidanRepo.findOne({where: {id: id}}) };
+        } else {
+            return { "data_bidan": {} };
+        }
     }
 
     async getDataSpesialisByID(request: Request, response: Response, next: NextFunction) {
         let id = await parseInt(request.params['id']);
         
-        let dataSpesialisByID = await this.suRepository.findOne({
-            where: {
-                id: id
-            }
-        })
+        let dataSpesialisByID = await this.userRepo.count({
+           id: id,
+           user_type: 'admin'
+        });
 
-        return { "data_spesialis": dataSpesialisByID };
+        if (dataSpesialisByID > 0) {
+            return { "data_spesialis": await this.userRepo.findOne({
+                where: {
+                    id: id,
+                    user_type: 'admin'
+                }
+            }) };
+        } else {
+            return { "data_spesialis": {} };
+        }
     }
 }
