@@ -373,4 +373,28 @@ export class SuController {
             return { "action_status": "failed", "item": userFindSpesialis[0], "message": "Data tidak dapat diperbaharui karena data spesialis tidak ditemukan." };
         }
     }
+
+    async getDataBidanByID(request: Request, response: Response, next: NextFunction) {
+        let id = await parseInt(request.params['id']);
+        
+        let dataBidanByID = await this.bidanRepo.findOne({
+            where: {
+                id: id
+            }
+        })
+
+        return { "data_bidan": dataBidanByID };
+    }
+
+    async getDataSpesialisByID(request: Request, response: Response, next: NextFunction) {
+        let id = await parseInt(request.params['id']);
+        
+        let dataSpesialisByID = await this.suRepository.findOne({
+            where: {
+                id: id
+            }
+        })
+
+        return { "data_spesialis": dataSpesialisByID };
+    }
 }

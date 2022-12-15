@@ -266,5 +266,17 @@ export const Routes = [
         route: "/api/su/riwayat/all",
         controller: SuController,
         action: "riwayat"
+    },
+    {
+        method: "get",
+        route: "/api/su/bidan/:id",
+        controller: SuController,
+        action: "getDataBidanByID"
+    },
+    {
+        method: "get",
+        route: "/api/su/spesialis/:id",
+        controller: SuController,
+        action: "getDataSpesialisByID"
     }
 ];
